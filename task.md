@@ -1,0 +1,21 @@
+- [ ] Phase 1: Foundation
+  - [ ] [Siddarth] Set up `CMakeLists.txt` and project structure
+  - [ ] [Dad] Implement Python SciPy oracle (`oracle.py`) and data generator
+  - [x] [Diya] Implement C++ data models (`Point3`, `KDNode`)
+  - [ ] [Siddarth] Implement C++ brute-force k-NN baseline
+  - [ ] [Siddarth] Implement C++ `std::chrono` timing harness
+- [ ] Phase 2: Core Algorithm
+  - [x] [Diya] Implement kd-tree `build` function (median split)
+  - [x] [Diya] Implement kd-tree `knn` query function (branch-and-bound)
+  - [ ] [Siddarth] Integrate `nanoflann` wrapper
+  - [ ] [Dad] Generate unit tests using AI
+  - [ ] [All] Verify correctness against Python oracle
+- [ ] Phase 3: HPC & Parallelization
+  - [ ] [Diya] Add OpenMP pragmas to batch queries
+  - [ ] [Siddarth] Generate benchmarking data (1e3 to 1e6 points)
+  - [ ] [Siddarth] Create Python plotting scripts (log-log plots, Amdahl's law)
+- [ ] Phase 4: Polish & Portfolio
+  - [ ] [Dad] Write Open3D visualization script
+  - [ ] [Diya/Siddarth] Draft core sections of LaTeX report (including **kd-tree vs Octree Efficiency Proof**)
+  - [ ] [Dad] Finalize formatting of LaTeX report and README.md
+  - [ ] [Diya/Siddarth] Record demo video

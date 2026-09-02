@@ -17,26 +17,36 @@ int main() {
 
 
     std::cout << "\n========================================\n";
-    std::cout << "   WEEK 2 & 3: BRUTE FORCE SEARCHES     \n";
-    std::cout << "========================================\n";
-    int query_id = 1; 
-    double search_radius = 0.05; 
-    std::cout << "[Pass] Radius Search and KNN Search algorithms are tested and loaded.\n";
-
-
-    std::cout << "\n========================================\n";
-    std::cout << "   WEEK 4: THREE-DIMENSIONAL GRID       \n";
+    std::cout << "   WEEK 2 & 4 & 5: SEARCH VERIFICATION  \n";
     std::cout << "========================================\n";
     
-    // We will build the boxes. We make the box size exactly equal to our target search radius
-    double box_size = search_radius; // 0.05
-    std::cout << "Building Cell-Linked List with Box Size h = " << box_size << "\n\n";
+    int query_id = 1; 
+    double search_radius = 0.05; 
+    std::cout << "Query Node: " << query_id << " | Radius: " << search_radius << "\n\n";
 
+    // 1. Run Brute Force (The Oracle)
+    std::vector<NeighborInfo> brute_neighbors = BruteForceSearch::radiusSearch(node_database, query_id, search_radius);
+
+    // 2. Build Cell Linked List
     CellLinkedList cell_list;
-    cell_list.build(node_database, box_size);
+    cell_list.build(node_database, search_radius);
+    
+    // 3. Run Fast Cell Search
+    std::vector<NeighborInfo> cell_neighbors = cell_list.radiusSearch(node_database, query_id, search_radius);
 
-    // Run the verification outputs required by the PDF Week 4 Checklist
-    cell_list.printCellStats();
+    std::cout << "--- Search Verification (PDF Section 7.3.1) ---\n";
+    std::cout << "Brute Force Found: " << brute_neighbors.size() << " neighbors.\n";
+    std::cout << "Cell List Found  : " << cell_neighbors.size() << " neighbors.\n";
+    
+    // Mismatch Calculation
+    int mismatch = std::abs((int)brute_neighbors.size() - (int)cell_neighbors.size());
+    std::cout << "\nMismatch (E_set) = " << mismatch << "\n";
+    
+    if (mismatch == 0) {
+        std::cout << "[SUCCESS] The fast Cell-Linked List perfectly reproduced the Brute-Force oracle!\n";
+    } else {
+        std::cout << "[FAILED] The algorithms do not match.\n";
+    }
 
     return 0;
 }

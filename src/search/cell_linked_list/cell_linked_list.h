@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../../node_data/node_types.h"
+#include "../../connectivity/neighbor_info.h"
 
 // Implements the uniform 3D background grid as specified in PDF Section 3.7 - 3.11
 class CellLinkedList {
@@ -23,6 +24,9 @@ public:
     
     // Week 4 Requirement: BuildCellStructure
     void build(const std::vector<Node>& database, double cell_size);
+
+    // Week 5 Requirement: Fast Cell-Based Radius Search (Algorithm 3)
+    std::vector<NeighborInfo> radiusSearch(const std::vector<Node>& database, int query_id, double r_s) const;
     
     // Getters for Verification (Week 4 Checklist)
     int getTotalCells() const;

@@ -1,52 +1,47 @@
-# Project Overview: Efficient 3D k-Nearest Neighbors using Spatial Partitioning Trees
+# Project Overview: Fast Neighbour Search and Node-Cloud Construction for Meshless CFD
 
 **Repository**: [https://github.com/DiyaPatel0715/SOP-Octree](https://github.com/DiyaPatel0715/SOP-Octree)
 **Team**: Diya, Siddarth (and Dad as AI/Tooling Catalyst)
+
+---
+
+## 🚀 Phase 2: 12-Week Meshless CFD Spatial Search Kernel (Current)
+This repository is currently implementing a robust, solver-ready spatial search library for three-dimensional Meshless Computational Fluid Dynamics (CFD). In meshless CFD, fluid domains are represented by unconnected node clouds. Efficiently determining local neighborhoods (both radius-based and k-nearest) is a mandatory prerequisite for constructing meshless differentiation stencils.
+
+### Progress Tracker
+- [x] **Week 1: Node Database (`src/node_data`)**
+  - Designed the `Node` structure to hold persistent global IDs, 3D coordinates, and CFD node classifications (`FLUID`, `WALL`, `FARFIELD`).
+  - Implemented CSV reading to ingest complex boundary geometries (e.g., NACA 2412 airfoil).
+- [x] **Week 2: Brute-Force Radius Search (`src/search/brute_force`)**
+  - Implemented an $O(N^2)$ exhaustive search to act as the mathematical "oracle" (ground truth) for future benchmarks.
+  - Implemented squared-distance mathematical optimizations to avoid expensive CPU square root calculations.
+- [x] **Week 3: Brute-Force K-Nearest Search**
+  - Implemented an exact k-nearest neighbor baseline using a standard C++ `std::priority_queue` (Max-Heap) to track the closest bounding set.
+- [x] **Week 4: 3D Background Cell Structure (`src/search/cell_linked_list`)**
+  - Mathematically partitioned the continuous CFD domain into a discrete 3D Cartesian cell grid $O(N)$.
+  - Flattened the 3D cell structure into a cache-friendly 1D memory array.
+- [x] **Week 5: Fast Cell-Based Radius Search**
+  - Achieved $O(1)$ query time per node by restricting distance evaluations strictly to the local $3 \times 3 \times 3$ background grid.
+  - Successfully verified a perfect $E_{set} = 0$ mismatch against the Brute-Force oracle on the NACA dataset.
+- [ ] **Week 6: KD-Tree vs. Cell-Linked List Benchmarking** *(Next)*
+- [ ] **Week 7: Hybrid Boundary Node Searching**
+- [ ] **Week 8: Compressed Solver-Ready Database**
+- [ ] **Week 9-12: Weighted Least Squares & PDE Validation**
+
+---
+
+## 🕰️ Phase 1: Efficient 3D k-Nearest Neighbors using Spatial Partitioning Trees (Summer Sprint)
 **Timeline**: July 12 - July 25 (2-Week Accelerated Sprint)
 
----
+### 1. Executive Summary
+We built a highly optimized C++17 library that solves the $k$-Nearest Neighbors (k-NN) problem for millions of points in 3D Euclidean space. Instead of relying on an $O(N)$ brute-force search, we wrote a **kd-tree from scratch** to achieve $O(N^{2/3})$ query times.
 
-## 1. Executive Summary (The Elevator Pitch)
-We are building a highly optimized C++17 library that solves the $k$-Nearest Neighbors (k-NN) problem for millions of points in 3D Euclidean space. 
+### 2. The Technical Solution
+* **Why kd-tree over Octree?**: Conventional Octrees suffer from severe imbalances and memory waste (empty nodes) when point clouds are sparse. By recursively splitting the data at the *median* of alternating axes using Quickselect (`std::nth_element`), we guarantee a perfectly balanced binary tree.
+* **The Search Algorithm (Branch-and-Bound)**: Finding the $k$ nearest neighbors requires a "Best-First" branch-and-bound search maintaining a max-heap.
+* **Lightweight HPC (OpenMP Parallelization)**: We implemented CPU parallelization using OpenMP. By allocating thread-local heaps, we avoid false sharing and maximize multi-core CPU usage.
 
-Instead of relying on an $O(N)$ brute-force search—which is unusable for large point clouds—we are writing a **kd-tree from scratch** to achieve $O(N^{2/3})$ query times. To push the limits of modern hardware, we are parallelizing the query workloads using **OpenMP**, achieving a target 5x-7x speedup on an 8-core CPU. The custom algorithm is rigorously benchmarked against the industry-standard `nanoflann` library, and mathematically verified against a Python SciPy oracle.
-
-## 2. Why This Problem Matters (Real-World Applications)
-Fast 3D spatial queries are a foundational primitive in modern computing. Our project mirrors the exact techniques used in:
-* **Autonomous Driving (LiDAR SLAM)**: Point-cloud registration (e.g., ICP) requires millions of k-NN queries per scan to align 3D maps.
-* **Computer Graphics**: Photon mapping for global illumination relies on fast $k$-nearest photon lookups per rendered pixel.
-* **3D Deep Learning**: Architectures like PointNet++ use k-NN to define local receptive fields for neural networks.
-
-## 3. The Technical Solution & Efficiency Proof
-A core requirement of this project is proving that our chosen method is more efficient than conventional methods like the Octree. The project tackles this through three major engineering pillars:
-
-### A. The Data Structure: Why kd-tree over Octree?
-While conventional Octrees recursively subdivide 3D space into 8 equal octants, they suffer from severe imbalances and memory waste (empty nodes) when point clouds are non-uniform or sparse. We instead implement a **kd-tree**. By recursively splitting the data at the *median* of alternating axes using Quickselect (`std::nth_element`), we guarantee a perfectly balanced binary tree. This provides a strict $O(N \log N)$ build time, strict $O(N)$ memory footprint, and mathematically guarantees there are no empty nodes, proving its efficiency over naive Octrees.
-
-### B. The Search Algorithm (Branch-and-Bound)
-Finding the $k$ nearest neighbors isn't just about traversing the tree; it requires a "Best-First" branch-and-bound search. We maintain a max-heap of the $k$ closest points found so far. As we descend the tree, we mathematically prove whether an entire branch of the tree can be pruned (skipped) if its bounding box is strictly farther away than our current worst-of-$k$ distance.
-
-### C. Lightweight HPC (OpenMP Parallelization)
-A single query is fast, but real-world applications run *batch queries* (e.g., 100,000 queries at once). We implement CPU parallelization using OpenMP. Because the tree is read-only during the query phase, the problem is "embarrassingly parallel." We allocate thread-local heaps to avoid cache invalidation and false sharing, allowing us to squeeze maximum performance out of standard multi-core CPUs.
-
----
-
-## 4. Benchmarking & Correctness Methodology
-To prove our system works at an industry level, we adhere to strict software engineering practices:
-* **The Oracle**: A Python script using `scipy.spatial.cKDTree` serves as the absolute ground truth. Our C++ implementation must achieve a Recall@k of 1.0 against this oracle on 100,000 randomized points.
-* **The Baseline**: We compare our handwritten C++ kd-tree's speed against `nanoflann`, a battle-tested, industry-standard C++ library.
-* **Performance Profiling**: We measure wall-clock time using `std::chrono` across $N \in [10^3, 10^6]$ points. We generate Log-log plots to prove our $O(N^{2/3})$ scaling, and we overlay Amdahl's Law curves to evaluate our OpenMP threading efficiency.
-
----
-
-## 5. Team Roles
-This project is structured to highlight distinct engineering strengths:
-
-* 👩‍💻 **Diya (Algorithms & HPC Lead)**: Owns the core mathematics and performance. Writes the C++ kd-tree `build()` and `knn()` query logic, implements the OpenMP pragmas, and authors the algorithmic complexity analysis.
-* 👨‍💻 **Siddarth (Systems & Benchmarks Lead)**: Owns the system architecture. Sets up CMake, integrates the `nanoflann` baseline, builds the C++ timing harnesses, and generates the performance scaling plots.
-* 👨‍💼 **Dad (AI Catalyst)**: Owns the tooling acceleration. Uses premium AI models to rapidly generate the Python SciPy oracles, the Open3D point-cloud visualizations, edge-case unit tests, and the LaTeX report formatting.
-
-## 6. Future Work (August Expansion)
-While the current 2-week sprint focuses on multi-core CPU parallelization (OpenMP), the architecture is designed to scale. Once we gain access to high-power computing clusters in August, we plan to extend this project with:
-* **GPU Acceleration**: A CUDA-based kernel for warp-per-query traversal.
-* **Distributed Computing**: A Data-Parallel MPI implementation to partition massive datasets across multiple nodes.
+### 3. Team Roles
+* 👩‍💻 **Diya (Algorithms & HPC Lead)**: Owns the core mathematics and performance. Writes the C++ kd-tree logic and OpenMP pragmas.
+* 👨‍💻 **Siddarth (Systems & Benchmarks Lead)**: Owns system architecture, CMake, `nanoflann` baseline, and scaling plots.
+* 👨‍💼 **Dad (AI Catalyst)**: Tooling acceleration, Python oracles, and edge-case unit tests.

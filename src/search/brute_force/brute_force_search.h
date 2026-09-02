@@ -13,4 +13,12 @@ public:
         int query_id, 
         double r_s
     );
+
+    // Week 3 Requirement: BruteKNearestSearch(i, k)
+    // Searches the entire database for the absolute closest 'k' neighbors
+    static std::vector<NeighborInfo> kNearestSearch(
+        const std::vector<Node>& database, 
+        int query_id, 
+        int k
+    );
 };

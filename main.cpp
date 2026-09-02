@@ -24,22 +24,29 @@ int main() {
     std::cout << "   WEEK 2: BRUTE FORCE RADIUS SEARCH    \n";
     std::cout << "========================================\n";
     
-    // We will pick Node 1 as our target.
     int query_id = 1; 
-    
-    // According to the NACA coordinates, a search radius of 0.05 is small enough 
-    // to just capture the closest points along the wing.
     double search_radius = 0.05; 
 
-    std::cout << "Running Brute-Force Radius Search for Node ID: " << query_id 
+    std::cout << "Running Radius Search for Node ID: " << query_id 
               << " with radius: " << search_radius << "\n";
 
-    // Call the newly created algorithm
-    std::vector<NeighborInfo> neighbors = BruteForceSearch::radiusSearch(node_database, query_id, search_radius);
+    std::vector<NeighborInfo> rad_neighbors = BruteForceSearch::radiusSearch(node_database, query_id, search_radius);
 
-    std::cout << "Found " << neighbors.size() << " neighbors.\n\n";
-    std::cout << "--- Neighbor List ---\n";
-    for (const auto& nb : neighbors) {
+    std::cout << "Found " << rad_neighbors.size() << " neighbors.\n";
+
+
+    std::cout << "\n========================================\n";
+    std::cout << "   WEEK 3: BRUTE FORCE K-NEAREST SEARCH \n";
+    std::cout << "========================================\n";
+    
+    int k = 5;
+    std::cout << "Running K-Nearest Search for Node ID: " << query_id 
+              << " for the closest " << k << " neighbors.\n";
+
+    std::vector<NeighborInfo> knn_neighbors = BruteForceSearch::kNearestSearch(node_database, query_id, k);
+
+    std::cout << "--- Top " << k << " Closest Neighbors ---\n";
+    for (const auto& nb : knn_neighbors) {
         std::cout << "Neighbor ID: " << nb.id 
                   << " | Distance: " << nb.distance 
                   << " | Type: " << static_cast<int>(nb.type) << "\n";

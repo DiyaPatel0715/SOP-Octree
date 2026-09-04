@@ -1,7 +1,7 @@
 # Project Overview: Fast Neighbour Search and Node-Cloud Construction for Meshless CFD
 
 **Repository**: [https://github.com/DiyaPatel0715/SOP-Octree](https://github.com/DiyaPatel0715/SOP-Octree)
-**Team**: Diya, Siddarth (and Dad as AI/Tooling Catalyst)
+**Team**: Diya, Siddarth and Sumedh
 
 ---
 

@@ -44,4 +44,4 @@ We built a highly optimized C++17 library that solves the $k$-Nearest Neighbors 
 ### 3. Team Roles
 * 👩‍💻 **Diya (Algorithms & HPC Lead)**: Owns the core mathematics and performance. Writes the C++ kd-tree logic and OpenMP pragmas.
 * 👨‍💻 **Siddarth (Systems & Benchmarks Lead)**: Owns system architecture, CMake, `nanoflann` baseline, and scaling plots.
-* 👨‍💼 **Dad (AI Catalyst)**: Tooling acceleration, Python oracles, and edge-case unit tests.
+* 👨‍💼 **Sumedh (AI Catalyst)**: Tooling acceleration, Python oracles, and edge-case unit tests.

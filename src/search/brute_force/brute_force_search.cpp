@@ -46,9 +46,15 @@ struct HeapNode {
     double dist_sq;
     Node node;
     
-    // std::priority_queue is a Max-Heap by default. 
-    // It keeps the element with the 'largest' value at the top.
+    // std::priority_queue is a Max-Heap. It keeps the "worst" (largest) value at the top.
     bool operator<(const HeapNode& other) const {
+        // PROFESSOR FEEDBACK FIX: Deterministic Tie-Breaker
+        // If two nodes are at the exact same distance, we use their global ID to break the tie.
+        // We want the node with the LARGER ID to be considered "worse" so it sits at the top of the heap and gets popped first.
+        // This ensures the final output prioritizes smaller IDs in the event of a distance tie.
+        if (std::abs(dist_sq - other.dist_sq) < 1e-12) {
+            return node.id < other.node.id; 
+        }
         return dist_sq < other.dist_sq; 
     }
 };
@@ -58,7 +64,6 @@ std::vector<NeighborInfo> BruteForceSearch::kNearestSearch(
     
     if (k <= 0) return {};
 
-    // 1. Locate the query node
     Node query_node;
     bool found = false;
     for (const auto& node : database) {
@@ -70,43 +75,36 @@ std::vector<NeighborInfo> BruteForceSearch::kNearestSearch(
     }
     if (!found) throw std::invalid_argument("Error: Query ID not found in database.");
 
-    // 2. The Max-Heap to store our Top 'K' closest points
     std::priority_queue<HeapNode> max_heap;
 
-    // 3. The Brute Force Loop O(N)
     for (const auto& node : database) {
-        if (node.id == query_id) continue; // Skip self
+        if (node.id == query_id) continue;
 
         double dx = node.x - query_node.x;
         double dy = node.y - query_node.y;
         double dz = node.z - query_node.z;
-        double dist_sq = dx*dx + dy*dy + dz*dz; // Calculate distance to current node
+        double dist_sq = dx*dx + dy*dy + dz*dz; 
 
-        // Heap Logic
         if (max_heap.size() < static_cast<size_t>(k)) {
-            // If the heap isn't full yet, just throw the point in!
             max_heap.push({dist_sq, node});
-        } else if (dist_sq < max_heap.top().dist_sq) {
-            // If the heap is full, but this new point is CLOSER than the WORST point in the heap:
-            // Kick out the worst point
-            max_heap.pop();
-            // Add the new, closer point
-            max_heap.push({dist_sq, node});
+        } else {
+            // Check if it's better than the worst node in the heap
+            // We create a temporary HeapNode to use our overloaded operator< which safely handles ties
+            HeapNode current = {dist_sq, node};
+            if (current < max_heap.top()) {
+                max_heap.pop();
+                max_heap.push(current);
+            }
         }
     }
 
-    // 4. Extract results from the heap
     std::vector<NeighborInfo> neighbors;
     while (!max_heap.empty()) {
         const auto& top = max_heap.top();
-        // Calculate the exact square root only for the final K winners!
         neighbors.push_back({top.node.id, std::sqrt(top.dist_sq), top.node.type});
         max_heap.pop();
     }
 
-    // PDF Requirement B.4: "The returned distances satisfy r1 <= r2 <= ... <= rk"
-    // Because a Max-Heap pops the largest/furthest element first, our vector is currently backwards.
-    // We reverse it so it goes from closest to furthest.
     std::reverse(neighbors.begin(), neighbors.end());
 
     return neighbors;

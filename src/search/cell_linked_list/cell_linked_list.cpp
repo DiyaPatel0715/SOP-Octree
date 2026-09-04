@@ -12,7 +12,6 @@ int CellLinkedList::getFlatIndex(int I, int J, int K) const {
     return I + (J * Nx) + (K * Nx * Ny);
 }
 
-// WEEK 4: Build Cell Structure
 void CellLinkedList::build(const std::vector<Node>& database, double cell_size) {
     if (database.empty()) return;
 
@@ -53,12 +52,10 @@ void CellLinkedList::build(const std::vector<Node>& database, double cell_size) 
     }
 }
 
-// WEEK 5: Fast Cell-Based Radius Search
 std::vector<NeighborInfo> CellLinkedList::radiusSearch(const std::vector<Node>& database, int query_id, double r_s) const {
     std::vector<NeighborInfo> neighbors;
     double r_s_sq = r_s * r_s;
 
-    // 1. Locate the query node
     Node query_node;
     bool found = false;
     for (const auto& node : database) {
@@ -70,7 +67,6 @@ std::vector<NeighborInfo> CellLinkedList::radiusSearch(const std::vector<Node>& 
     }
     if (!found) return neighbors;
 
-    // 2. Find which box the query node is in
     int I_center = static_cast<int>((query_node.x - xmin) / hx);
     int J_center = static_cast<int>((query_node.y - ymin) / hy);
     int K_center = static_cast<int>((query_node.z - zmin) / hz);
@@ -79,23 +75,26 @@ std::vector<NeighborInfo> CellLinkedList::radiusSearch(const std::vector<Node>& 
     J_center = std::max(0, std::min(J_center, Ny - 1));
     K_center = std::max(0, std::min(K_center, Nz - 1));
 
-    // 3. The 3x3x3 Search (Look at exactly 27 boxes)
-    for (int p = -1; p <= 1; p++) {
-        for (int q = -1; q <= 1; q++) {
-            for (int r = -1; r <= 1; r++) {
+    // PROFESSOR FEEDBACK FIX: Dynamic cell boundaries
+    // Instead of hardcoding a 1-cell radius (-1 to 1), we mathematically calculate
+    // how many cell layers we need to search based on the requested r_s versus the actual cell size h.
+    int layer_x = std::max(1, static_cast<int>(std::ceil(r_s / hx)));
+    int layer_y = std::max(1, static_cast<int>(std::ceil(r_s / hy)));
+    int layer_z = std::max(1, static_cast<int>(std::ceil(r_s / hz)));
+
+    for (int p = -layer_x; p <= layer_x; p++) {
+        for (int q = -layer_y; q <= layer_y; q++) {
+            for (int r = -layer_z; r <= layer_z; r++) {
                 int I = I_center + p;
                 int J = J_center + q;
                 int K = K_center + r;
 
-                // Check if the neighbor box is actually inside the room boundaries
                 if (I >= 0 && I < Nx && J >= 0 && J < Ny && K >= 0 && K < Nz) {
                     int flat_idx = getFlatIndex(I, J, K);
                     
-                    // 4. Open the box and test only the candidates inside
                     for (int candidate_id : grid[flat_idx]) {
-                        if (candidate_id == query_id) continue; // Skip self
+                        if (candidate_id == query_id) continue;
 
-                        // Since node IDs are 1-indexed, ID 1 is at database[0]
                         const Node& candidate = database[candidate_id - 1];
 
                         double dx = candidate.x - query_node.x;
@@ -126,7 +125,6 @@ int CellLinkedList::getNonEmptyCells() const {
 }
 
 void CellLinkedList::printCellStats() const {
-    std::cout << "--- Background Grid Built Successfully ---\n";
     std::cout << "Domain Bounds: \n"
               << "  X: [" << xmin << " to " << xmax << "]\n"
               << "  Y: [" << ymin << " to " << ymax << "]\n"
@@ -135,3 +133,5 @@ void CellLinkedList::printCellStats() const {
     std::cout << "Total Allocated Cells: " << getTotalCells() << "\n";
     std::cout << "Active (Non-Empty) Cells: " << getNonEmptyCells() << "\n";
 }
+
+double CellLinkedList::getCellSize() const { return hx; }

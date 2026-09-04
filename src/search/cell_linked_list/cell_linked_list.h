@@ -32,4 +32,5 @@ public:
     int getTotalCells() const;
     int getNonEmptyCells() const;
     void printCellStats() const;
+    double getCellSize() const;
 };

@@ -4,6 +4,7 @@ void NeighborDatabase::initialize(int total_nodes) {
     // The offset array needs to be N + 1 size (as per PDF Section 5.9)
     // We initialize all offsets to 0.
     NeighborOffset.assign(total_nodes + 1, 0);
+    NeighborCount.assign(total_nodes, 0); // ADDED: Explicit count tracking
     
     // Clear the data arrays in case of rebuilds
     NeighborID.clear();
@@ -17,6 +18,7 @@ void NeighborDatabase::addNeighbors(int node_id, const std::vector<NeighborInfo>
     
     // Record where this node's neighbors START on the flattened 1D arrays
     NeighborOffset[index] = NeighborID.size();
+    NeighborCount[index] = neighbors.size(); // ADDED: Explicit count storage
 
     // Flatten the data onto the 1D arrays
     for (const auto& nb : neighbors) {

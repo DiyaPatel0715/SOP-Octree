@@ -10,6 +10,7 @@ class NeighborDatabase {
 public:
     // The exact 4 arrays required by the meshless WLS solver
     std::vector<int> NeighborOffset;
+    std::vector<int> NeighborCount; // ADDED: Required by Stage 9
     std::vector<int> NeighborID;
     std::vector<double> NeighborDistance;
     std::vector<NodeType> NeighborType;
